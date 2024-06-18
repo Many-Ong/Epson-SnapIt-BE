@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import axios, { AxiosInstance } from 'axios';
 import { PrintMode } from 'libs/types/epson';
 import * as qs from 'qs';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class EpsonService {
@@ -103,6 +105,40 @@ export class EpsonService {
         console.error(`Error: ${error.message}`);
       }
       throw new Error('Failed to create print job'); // Improved error handling
+    }
+  }
+
+  async uploadPrintFile(uploadUri: string, file: Express.Multer.File) {
+    const ext = path.extname(file.originalname);
+    const fileName = `1${ext}`;
+    const uploadUrl = `${uploadUri}&File=${fileName}`;
+
+    const headers = {
+      'Content-Length': file.size.toString(),
+      'Content-Type': 'application/octet-stream',
+    };
+
+    console.log('Uploading to:', uploadUrl);
+    console.log('File details:', {
+      originalname: file.originalname,
+      size: file.size,
+      mimetype: file.mimetype,
+    });
+
+    try {
+      const response = await this.axiosInstance.post(uploadUrl, file.buffer, { headers });
+      console.log('3. Upload print file: --------------------------------------');
+      console.log(response.data);
+
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error(`Error: ${error.response.status}: ${error.response.statusText}`);
+        console.error(`Error data: ${error.response.data}`);
+      } else {
+        console.error(`Error: ${error.message}`);
+      }
+      throw new Error('Failed to upload print file');
     }
   }
 }
