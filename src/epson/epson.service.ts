@@ -53,9 +53,8 @@ export class EpsonService {
     }
   }
 
-  async getDevicePrintCapabilities(accessToken: string, printMode: PrintMode) {
-    const DEVICE_ID = process.env.EPSON_DEVICE;
-    const URL = `/api/1/printing/printers/${DEVICE_ID}/capability/${printMode}`;
+  async getDevicePrintCapabilities(accessToken: string, subjectId: string, printMode: PrintMode) {
+    const URL = `/api/1/printing/printers/${subjectId}/capability/${printMode}`;
 
     const headers = {
       Authorization: `Bearer ${accessToken}`,
@@ -64,8 +63,9 @@ export class EpsonService {
 
     try {
       const response = await this.axiosInstance.get(URL, { headers });
-
+      console.log('Get Device Print Capabilities: --------------------------------------');
       console.log(response.data);
+      return response.data;
     } catch (error) {
       if (error.response) {
         console.error(`Error: ${error.response.status}: ${error.response.statusText}`);
@@ -73,6 +73,36 @@ export class EpsonService {
         console.error(`Error: ${error.message}`);
       }
       throw new Error('Failed to fetch device print capabilities');
+    }
+  }
+
+  async printSetting(accessToken: string, subjectId: string, jobName = 'SampleJob1', printMode = 'document') {
+    const JOB_URI = `/api/1/printing/printers/${subjectId}/jobs`;
+
+    const data_param = {
+      job_name: jobName,
+      print_mode: printMode,
+    };
+
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json;charset=utf-8',
+    };
+
+    try {
+      const response = await this.axiosInstance.post(JOB_URI, data_param, { headers });
+      console.log('2. Create print job: --------------------------------------');
+      console.log(response.data);
+
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error(`Error: ${error.response.status}: ${error.response.statusText}`);
+        console.error(`Error data: ${error.response.data}`);
+      } else {
+        console.error(`Error: ${error.message}`);
+      }
+      throw new Error('Failed to create print job'); // Improved error handling
     }
   }
 }
