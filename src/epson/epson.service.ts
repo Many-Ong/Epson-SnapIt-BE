@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import axios, { AxiosInstance } from 'axios';
+import { PrintMode } from 'libs/types/epson';
 import * as qs from 'qs';
 
 @Injectable()
@@ -7,12 +8,12 @@ export class EpsonService {
   private axiosInstance: AxiosInstance;
 
   constructor() {
-    this.axiosInstance = axios.create({});
+    const HOST = process.env.EPSON_HOST;
+    this.axiosInstance = axios.create({ baseURL: `https://${HOST}` });
   }
 
   async authentication(refreshToken?: string) {
-    const HOST = process.env.EPSON_HOST;
-    const AUTH_URI = `https://${HOST}/api/1/printing/oauth2/auth/token?subject=printer`;
+    const AUTH_URI = `/api/1/printing/oauth2/auth/token?subject=printer`;
     const CLIENT_ID = process.env.EPSON_CLIENT_ID;
     const SECRET = process.env.EPSON_SECRET;
     const DEVICE = process.env.EPSON_DEVICE;
@@ -48,7 +49,30 @@ export class EpsonService {
       } else {
         console.error(`Error: ${error.message}`);
       }
-      process.exit(1); // Consider handling this more gracefully in a real application
+      throw new Error('Authentication failed');
+    }
+  }
+
+  async getDevicePrintCapabilities(accessToken: string, printMode: PrintMode) {
+    const DEVICE_ID = process.env.EPSON_DEVICE;
+    const URL = `/api/1/printing/printers/${DEVICE_ID}/capability/${printMode}`;
+
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json;charset=utf-8',
+    };
+
+    try {
+      const response = await this.axiosInstance.get(URL, { headers });
+
+      console.log(response.data);
+    } catch (error) {
+      if (error.response) {
+        console.error(`Error: ${error.response.status}: ${error.response.statusText}`);
+      } else {
+        console.error(`Error: ${error.message}`);
+      }
+      throw new Error('Failed to fetch device print capabilities');
     }
   }
 }
