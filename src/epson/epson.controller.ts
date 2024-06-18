@@ -78,4 +78,17 @@ export class EpsonController {
     const res = await this.epsonService.uploadPrintFile(uploadUri, file);
     return ResponseEntity.OK_WITH(res);
   }
+
+  @ApiOperation({
+    summary: 'execute print',
+  })
+  @Post('execute-print')
+  async executePrint(
+    @Query('access-token') accessToken: string,
+    @Query('subject-id') subjectId: string,
+    @Query('job-id') jobId: string,
+  ) {
+    const res = await this.epsonService.executePrint(accessToken, subjectId, jobId);
+    return ResponseEntity.OK_WITH(res);
+  }
 }

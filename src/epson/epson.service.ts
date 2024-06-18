@@ -141,4 +141,28 @@ export class EpsonService {
       throw new Error('Failed to upload print file');
     }
   }
+
+  async executePrint(accessToken: string, subjectId: string, jobId: string) {
+    const PRINT_URI = `/api/1/printing/printers/${subjectId}/jobs/${jobId}/print`;
+
+    const headers = {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json;charset=utf-8',
+    };
+
+    try {
+      const response = await this.axiosInstance.post(PRINT_URI, null, { headers });
+      console.log('4. Execute Print: --------------------------------------');
+
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error(`Error: ${error.response.status}: ${error.response.statusText}`);
+        console.error(`Error data: ${error.response.data}`);
+      } else {
+        console.error(`Error: ${error.message}`);
+      }
+      throw new Error('Failed to execute print');
+    }
+  }
 }
