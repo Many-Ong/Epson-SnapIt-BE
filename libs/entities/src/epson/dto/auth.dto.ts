@@ -5,6 +5,7 @@ export class AuthDto {
   @ApiPropertyOptional({
     description: 'The refresh token to obtain a new access token',
     type: String,
+    default: '',
   })
   @IsOptional()
   @IsString()
