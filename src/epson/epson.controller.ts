@@ -1,15 +1,18 @@
-import { Body, Controller, Get, Headers, Param, Post, Query } from '@nestjs/common';
-import { ApiExtraModels, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Headers, Param, Post, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { ApiBody, ApiConsumes, ApiExtraModels, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { EpsonService } from './epson.service';
 import { ResponseEntity } from 'libs/types/response.entity';
 import { AuthDto } from 'libs/entities/src/epson/dto/auth.dto';
 import { PrintMode } from 'libs/types/epson';
 import { PrintSettingDto } from 'libs/entities/src/epson/print-setting.dto';
+import { UploadFileDto } from 'libs/entities/src/epson/dto/upload-file.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Epson')
 @Controller('epson')
 @ApiExtraModels(AuthDto)
 @ApiExtraModels(PrintSettingDto)
+@ApiExtraModels(UploadFileDto)
 export class EpsonController {
   constructor(private readonly epsonService: EpsonService) {}
 
@@ -50,6 +53,29 @@ export class EpsonController {
       printSettingDto.jobName,
       printSettingDto.printMode,
     );
+    return ResponseEntity.OK_WITH(res);
+  }
+
+  @ApiOperation({
+    summary: 'upload print file',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'File upload',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @Post('upload-print-file')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadPrintFile(@Query('upload-uri') uploadUri: string, @UploadedFile() file: Express.Multer.File) {
+    const res = await this.epsonService.uploadPrintFile(uploadUri, file);
     return ResponseEntity.OK_WITH(res);
   }
 }
